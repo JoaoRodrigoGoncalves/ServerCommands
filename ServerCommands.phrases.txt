@@ -11,6 +11,6 @@
 	{
 		"en"	"Run"
 		"pt"	"Executar"
-		"es"	Ejecutar
+		"es"	"Ejecutar"
 	}
 }
