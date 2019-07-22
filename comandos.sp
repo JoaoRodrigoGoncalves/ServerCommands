@@ -2,7 +2,7 @@
 
 #define DEBUG
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 #define CONFIG_FILE "";
 
 #include <sourcemod>
@@ -16,7 +16,6 @@ char comandoCompleto[128];
 int commandCarry;
 ArrayList arrayComandos;
 ArrayList tempPhrases;
-//static KVPath[PLATFORM_MAX_PATH];
 
 EngineVersion g_Game;
 
@@ -36,7 +35,7 @@ public void OnPluginStart()
 	{
 		SetFailState("This plugin is for CSGO/CSS only.");	
 	}
-	//BuildPath(Path_SM, KVPath, sizeof(KVPath), "configs/serverCommandsList.txt");
+	CreateConVar("serverCommands_version", PLUGIN_VERSION, "Plugin Version", FCVAR_NOTIFY|FCVAR_REPLICATED);
 	RegConsoleCmd("sm_comandos", MenuComandos);
 	RegConsoleCmd("sm_commands", MenuComandos);
 }
@@ -141,7 +140,6 @@ public int CustomMenuHandler(Menu menu, MenuAction action, int client, int selec
 				char command[128];
 				arrayComandos.GetString(commandCarry, command, 127);
 				Format(comandoCompleto, 127, "sm_%s", command);
-				//PrintToConsole(client, "[commands.smx] Carry: %i. Command: %s. CommandComplete: %s.", commandCarry, command, comandoCompleto);
 				ClientCommand(client, comandoCompleto);
 			}
 		}
