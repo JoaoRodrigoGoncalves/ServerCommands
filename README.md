@@ -8,9 +8,9 @@ This plugin creates a menu with all registered commands and shows it to the clie
 
 ## How to install
 
-comandos.smx -> addons/sourcemod/plugins
-ServerCommands.cfg -> addons/sourcemod/configs
-ServerCommands.phrases.txt -> addons/sourcemod/translations
+comandos.smx -> addons/sourcemod/plugins <br/>
+ServerCommands.cfg -> addons/sourcemod/configs <br/>
+ServerCommands.phrases.txt -> addons/sourcemod/translations </br>
 
 ## TO-DO
 
