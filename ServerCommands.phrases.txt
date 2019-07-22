@@ -4,11 +4,13 @@
 	{
 		"en"	"Commands"
 		"pt"	"Comandos"
+		"es"	"Comandos"
 	}
 
 	"runCommand"
 	{
 		"en"	"Run"
 		"pt"	"Executar"
+		"es"	Ejecutar
 	}
 }
