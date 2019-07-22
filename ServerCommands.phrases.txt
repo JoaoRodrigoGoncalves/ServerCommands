@@ -1,0 +1,14 @@
+"Phrases"
+{
+	"commands"
+	{
+		"en"	"Commands"
+		"pt"	"Comandos"
+	}
+
+	"runCommand"
+	{
+		"en"	"Run"
+		"pt"	"Executar"
+	}
+}

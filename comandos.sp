@@ -2,16 +2,15 @@
 
 #define DEBUG
 
-#define PLUGIN_VERSION "1.1"
-#define CONFIG_FILE "";
+#define PLUGIN_VERSION "2.0"
 
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
-//#include <sdkhooks>
 
 #pragma newdecls required
 
+char CONFIG_PATH[PLATFORM_MAX_PATH];
 char comandoCompleto[128];
 int commandCarry;
 ArrayList arrayComandos;
@@ -36,6 +35,8 @@ public void OnPluginStart()
 		SetFailState("This plugin is for CSGO/CSS only.");	
 	}
 	CreateConVar("serverCommands_version", PLUGIN_VERSION, "Plugin Version", FCVAR_NOTIFY|FCVAR_REPLICATED);
+	LoadTranslations("ServerCommands.phrases");
+	BuildPath(Path_SM, CONFIG_PATH, sizeof(CONFIG_PATH), "configs/ServerCommands.cfg");
 	RegConsoleCmd("sm_comandos", MenuComandos);
 	RegConsoleCmd("sm_commands", MenuComandos);
 }
@@ -43,49 +44,44 @@ public void OnPluginStart()
 public void OnMapStart()
 {
 	arrayComandos = new ArrayList(ByteCountToCells(128));
-	//TO-DO: Get rid of these PushStrings and create a config file to get the information from
-	arrayComandos.PushString("credits");
-	arrayComandos.PushString("discord");
-	arrayComandos.PushString("gloves");
-	arrayComandos.PushString("grupo");
-	arrayComandos.PushString("knife");
-	arrayComandos.PushString("mm");
-	arrayComandos.PushString("quake");
-	arrayComandos.PushString("rankme");
-	arrayComandos.PushString("resetmyrank");
-	arrayComandos.PushString("roleta");
-	arrayComandos.PushString("rs");
-	arrayComandos.PushString("shop");
-	arrayComandos.PushString("trade");
-	arrayComandos.PushString("vip");
-	arrayComandos.PushString("vipspawn");
-	arrayComandos.PushString("ws");
+	tempPhrases = new ArrayList(ByteCountToCells(128));
+	
+	KeyValues kv = new KeyValues("ServerCommands");
+	kv.ImportFromFile(CONFIG_PATH);
+	
+	if(!kv.GotoFirstSubKey())
+	{
+		delete kv;
+		SetFailState("[ServerCommands] Cannot read from ServerCommands.cfg file. Plugin Halted!");
+	}
+	
+	char commandNameBuffer[128];
+	char commandDescBuffer[128];
+	
+	do
+	{
+		kv.GetString("commandName", commandNameBuffer, 127);
+		kv.GetString("commandDescription", commandDescBuffer, 127, "");
+		
+		arrayComandos.PushString(commandNameBuffer);
+		tempPhrases.PushString(commandDescBuffer);
+		
+	} while (kv.GotoNextKey());
+	
+	delete kv;
+	
 	int i;
 	PrintToServer("[SM] Loading commands list");
 	for (i = 0; i < arrayComandos.Length; i++)
 	{
 		char stringFromArray[128];
+		char descFromArray[128];
 		arrayComandos.GetString(i, stringFromArray, 127);
-		PrintToServer("[%i] %s", i, stringFromArray);
+		tempPhrases.GetString(i, descFromArray, 127);
+		PrintToServer("[%i] %s - %s", i, stringFromArray, descFromArray);
 	}
-	PrintToServer("[SM] Finished loading the commands list");
-	tempPhrases = new ArrayList(ByteCountToCells(128));
-	tempPhrases.PushString("Mostra quantos creditos é que tens!");
-	tempPhrases.PushString("Mostra o link do nosso discord!");
-	tempPhrases.PushString("Escolhe umas gloves!");
-	tempPhrases.PushString("Mostra o lonk do nosso grupo Steam!");
-	tempPhrases.PushString("Escolhe uma faca!");
-	tempPhrases.PushString("Mostra os pontos para o próximo rank!");
-	tempPhrases.PushString("Menu de configuração dos sons do QUAKE!");
-	tempPhrases.PushString("Mostra os teus pontos!");
-	tempPhrases.PushString("Dá reset ao teu rank!");
-	tempPhrases.PushString("Aposta os teus créditos!");
-	tempPhrases.PushString("Dá reset á tua score da tabela de pontuações!");
-	tempPhrases.PushString("A loja do Servidor!");
-	tempPhrases.PushString("Troca créditos com outros jogadores!");
-	tempPhrases.PushString("Preços dos VIPs!");
-	tempPhrases.PushString("[VIP] Dá respawn!");
-	tempPhrases.PushString("Escolhe uma skin para a tua arma!");
+	PrintToServer("[SM] Finished loading commands list");
+	
 }
 
 public int CommandMenuHandler(Menu menu, MenuAction action, int client, int selection)
@@ -107,19 +103,28 @@ public int CommandMenuHandler(Menu menu, MenuAction action, int client, int sele
 public Action MenuComandos(int client, int agrs)
 {	
 	Menu comandos = new Menu(CommandMenuHandler);
-	comandos.SetTitle("Comandos");
+	comandos.SetTitle("%t", "commands");
 	
-	int i;
-	for (i = 0; i < arrayComandos.Length; i++)
+	if(arrayComandos.Length != 0)
 	{
-		char stringFromArray[128];
-		char userFriendlyCommand[128];
-		char itemID[128];
-		arrayComandos.GetString(i, stringFromArray, 127);
-		Format(userFriendlyCommand, 127, "!%s", stringFromArray);
-		Format(itemID, 127, "%i", StringToInt(stringFromArray));
-		
-		comandos.AddItem(itemID, userFriendlyCommand, ITEMDRAW_DEFAULT);
+		int i;
+		for (i = 0; i < arrayComandos.Length; i++)
+		{
+			char stringFromArray[128];
+			char userFriendlyCommand[128];
+			char itemID[128];
+			arrayComandos.GetString(i, stringFromArray, 127);
+			Format(userFriendlyCommand, 127, "!%s", stringFromArray);
+			Format(itemID, 127, "%i", StringToInt(stringFromArray));
+			
+			comandos.AddItem(itemID, userFriendlyCommand, ITEMDRAW_DEFAULT);
+		}
+	}
+	else
+	{
+		char noCommand[128];
+		Format(noCommand, 127, "%t", "noCommand");
+		comandos.AddItem("", noCommand, ITEMDRAW_DISABLED);
 	}
 
 	comandos.ExitButton = true;
@@ -163,19 +168,16 @@ Menu CustomMenu(int client, int comando)
 	char stringFromArray[128];
 	arrayComandos.GetString(comando, stringFromArray, 127);
 	info.SetTitle("!%s", stringFromArray);
-	
-	/*TO-DO: Add a description about the selected command 
-	 * (Description coming from the config file)	
-	 */
+		 
+	char infoText[128];
+	tempPhrases.GetString(comando, infoText, 127);
 	 
-	 char infoText[128];
-	 tempPhrases.GetString(comando, infoText, 127);
-	 
-	 info.AddItem("info", infoText, ITEMDRAW_DISABLED);
-	 
+	info.AddItem("info", infoText, ITEMDRAW_DISABLED);
 	 
 	commandCarry = comando;
-	info.AddItem("exec", "Executar", ITEMDRAW_DEFAULT);
+	char runCommand[128];
+	Format(runCommand, 127, "%t", "runCommand");
+	info.AddItem("exec", runCommand, ITEMDRAW_DEFAULT);
 	
 	info.ExitBackButton = true;
 	info.ExitButton = true;
