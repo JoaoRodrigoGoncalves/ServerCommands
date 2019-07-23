@@ -13,4 +13,10 @@
 		"pt"	"Executar"
 		"es"	"Ejecutar"
 	}
+
+	"cant read from config file"
+	{
+		"en"	"Cannot read from ServerCommands.cfg file. Plugin Halted!"
+		"pt"	"Não foi possível ler o ficheiro ServerCommands.cfg. Plugin terminado!"
+	}
 }

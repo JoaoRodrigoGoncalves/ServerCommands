@@ -1,7 +1,5 @@
 #pragma semicolon 1
 
-#define DEBUG
-
 #define PLUGIN_VERSION "2.1"
 
 #include <sourcemod>
@@ -11,10 +9,11 @@
 #pragma newdecls required
 
 char CONFIG_PATH[PLATFORM_MAX_PATH];
-char comandoCompleto[128];
+char completeCommand[128];
 int commandCarry;
-ArrayList arrayComandos;
-ArrayList tempPhrases;
+Handle debugMode;
+ArrayList commandsArray;
+ArrayList phrasesArray;
 
 EngineVersion g_Game;
 
@@ -35,16 +34,17 @@ public void OnPluginStart()
 		SetFailState("This plugin is for CSGO/CSS only.");	
 	}
 	CreateConVar("serverCommands_version", PLUGIN_VERSION, "Plugin Version", FCVAR_NOTIFY|FCVAR_REPLICATED);
+	debugMode = CreateConVar("serverCommands_debug", "0", "Enables or disables the debug option");
 	LoadTranslations("ServerCommands.phrases");
 	BuildPath(Path_SM, CONFIG_PATH, sizeof(CONFIG_PATH), "configs/ServerCommands.cfg");
-	RegConsoleCmd("sm_comandos", MenuComandos);
-	RegConsoleCmd("sm_commands", MenuComandos);
+	RegConsoleCmd("sm_comandos", CommandsMenu);
+	RegConsoleCmd("sm_commands", CommandsMenu);
 }
 
 public void OnMapStart()
 {
-	arrayComandos = new ArrayList(ByteCountToCells(128));
-	tempPhrases = new ArrayList(ByteCountToCells(128));
+	commandsArray = new ArrayList(ByteCountToCells(128));
+	phrasesArray = new ArrayList(ByteCountToCells(128));
 	
 	KeyValues kv = new KeyValues("ServerCommands");
 	kv.ImportFromFile(CONFIG_PATH);
@@ -52,7 +52,7 @@ public void OnMapStart()
 	if(!kv.GotoFirstSubKey())
 	{
 		delete kv;
-		SetFailState("[ServerCommands] Cannot read from ServerCommands.cfg file. Plugin Halted!");
+		SetFailState("[ServerCommands] %t", "cant read from config file");
 	}
 	
 	char commandNameBuffer[128];
@@ -63,25 +63,27 @@ public void OnMapStart()
 		kv.GetString("commandName", commandNameBuffer, 127);
 		kv.GetString("commandDescription", commandDescBuffer, 127, "");
 		
-		arrayComandos.PushString(commandNameBuffer);
-		tempPhrases.PushString(commandDescBuffer);
+		commandsArray.PushString(commandNameBuffer);
+		phrasesArray.PushString(commandDescBuffer);
 		
 	} while (kv.GotoNextKey());
 	
 	delete kv;
 	
-	int i;
-	PrintToServer("[SM] Loading commands list");
-	for (i = 0; i < arrayComandos.Length; i++)
+	if(GetConVarInt(debugMode) == 1)
 	{
-		char stringFromArray[128];
-		char descFromArray[128];
-		arrayComandos.GetString(i, stringFromArray, 127);
-		tempPhrases.GetString(i, descFromArray, 127);
-		PrintToServer("[%i] %s - %s", i, stringFromArray, descFromArray);
+		int i;
+		PrintToServer("[SM] Loading commands list");
+		for (i = 0; i < commandsArray.Length; i++)
+		{
+			char stringFromArray[128];
+			char descFromArray[128];
+			commandsArray.GetString(i, stringFromArray, 127);
+			phrasesArray.GetString(i, descFromArray, 127);
+			PrintToServer("[%i] %s - %s", i, stringFromArray, descFromArray);
+		}
+		PrintToServer("[SM] Finished loading commands list");
 	}
-	PrintToServer("[SM] Finished loading commands list");
-	
 }
 
 public int CommandMenuHandler(Menu menu, MenuAction action, int client, int selection)
@@ -100,35 +102,35 @@ public int CommandMenuHandler(Menu menu, MenuAction action, int client, int sele
 	}
 }
 
-public Action MenuComandos(int client, int agrs)
+public Action CommandsMenu(int client, int agrs)
 {	
-	Menu comandos = new Menu(CommandMenuHandler);
-	comandos.SetTitle("%t", "commands");
+	Menu commands = new Menu(CommandMenuHandler);
+	commands.SetTitle("%t", "commands");
 	
-	if(arrayComandos.Length != 0)
+	if(commandsArray.Length != 0)
 	{
 		int i;
-		for (i = 0; i < arrayComandos.Length; i++)
+		for (i = 0; i < commandsArray.Length; i++)
 		{
-			char stringFromArray[128];
+			char commandClean[128];
 			char userFriendlyCommand[128];
 			char itemID[128];
-			arrayComandos.GetString(i, stringFromArray, 127);
-			Format(userFriendlyCommand, 127, "!%s", stringFromArray);
-			Format(itemID, 127, "%i", StringToInt(stringFromArray));
-			
-			comandos.AddItem(itemID, userFriendlyCommand, ITEMDRAW_DEFAULT);
+			commandsArray.GetString(i, commandClean, 127);
+			Format(userFriendlyCommand, 127, "!%s", commandClean);
+					
+			IntToString(i, itemID, 127);
+			commands.AddItem(itemID, userFriendlyCommand, ITEMDRAW_DEFAULT);
 		}
 	}
 	else
 	{
 		char noCommand[128];
 		Format(noCommand, 127, "%t", "noCommand");
-		comandos.AddItem("", noCommand, ITEMDRAW_DISABLED);
+		commands.AddItem("", noCommand, ITEMDRAW_DISABLED);
 	}
 
-	comandos.ExitButton = true;
-	comandos.Display(client, 50);
+	commands.ExitButton = true;
+	commands.Display(client, 50);
 	
 	
 	return Plugin_Handled;
@@ -143,9 +145,9 @@ public int CustomMenuHandler(Menu menu, MenuAction action, int client, int selec
 			if(IsClientInGame(client))
 			{
 				char command[128];
-				arrayComandos.GetString(commandCarry, command, 127);
-				Format(comandoCompleto, 127, "sm_%s", command);
-				ClientCommand(client, comandoCompleto);
+				commandsArray.GetString(commandCarry, command, 127);
+				Format(completeCommand, 127, "sm_%s", command);
+				ClientCommand(client, completeCommand);
 			}
 		}
 		
@@ -161,20 +163,21 @@ public int CustomMenuHandler(Menu menu, MenuAction action, int client, int selec
 	}
 }
 
-Menu CustomMenu(int client, int comando)
+Menu CustomMenu(int client, int command)
 {
+	if(client){} //To suppress warnings
 	
 	Menu info = new Menu(CustomMenuHandler);
-	char stringFromArray[128];
-	arrayComandos.GetString(comando, stringFromArray, 127);
-	info.SetTitle("!%s", stringFromArray);
+	char commandClean[128];
+	commandsArray.GetString(command, commandClean, 127);
+	info.SetTitle("!%s", commandClean);
 		 
 	char infoText[128];
-	tempPhrases.GetString(comando, infoText, 127);
+	phrasesArray.GetString(command, infoText, 127);
 	 
 	info.AddItem("info", infoText, ITEMDRAW_DISABLED);
 	 
-	commandCarry = comando;
+	commandCarry = command;
 	char runCommand[128];
 	Format(runCommand, 127, "%t", "runCommand");
 	info.AddItem("exec", runCommand, ITEMDRAW_DEFAULT);
