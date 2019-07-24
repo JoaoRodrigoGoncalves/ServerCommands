@@ -35,7 +35,7 @@ public void OnPluginStart()
 	}
 	CreateConVar("serverCommands_version", PLUGIN_VERSION, "Plugin Version", FCVAR_NOTIFY|FCVAR_REPLICATED);
 	debugMode = CreateConVar("serverCommands_debug", "0", "Enables or disables the debug option");
-	AutoExecConfig(true);
+	AutoExecConfig(true, "plugin.ServerCommands");
 	LoadTranslations("ServerCommands.phrases");
 	BuildPath(Path_SM, CONFIG_PATH, sizeof(CONFIG_PATH), "configs/ServerCommands.cfg");
 	RegConsoleCmd("sm_comandos", CommandsMenu);
