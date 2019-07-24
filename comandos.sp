@@ -74,7 +74,7 @@ public void OnMapStart()
 	if(GetConVarInt(debugMode) == 1)
 	{
 		int i;
-		PrintToServer("[SM] Loading commands list");
+		PrintToServer("[ServerCommands] %t", "Loading commands list");
 		for (i = 0; i < commandsArray.Length; i++)
 		{
 			char stringFromArray[128];
@@ -83,7 +83,7 @@ public void OnMapStart()
 			phrasesArray.GetString(i, descFromArray, 127);
 			PrintToServer("[%i] %s - %s", i, stringFromArray, descFromArray);
 		}
-		PrintToServer("[SM] Finished loading commands list");
+		PrintToServer("[ServerCommands] %t", "Finished loading commands list");
 	}
 }
 
