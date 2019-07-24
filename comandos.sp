@@ -15,11 +15,9 @@ Handle debugMode;
 ArrayList commandsArray;
 ArrayList phrasesArray;
 
-EngineVersion g_Game;
-
 public Plugin myinfo = 
 {
-	name = "[CS:GO/CSS] Server Commands",
+	name = "[CS:GO] Server Commands",
 	author = "JoaoRodrigoGamer",
 	description = "Server Commands Menu",
 	version = PLUGIN_VERSION,
@@ -28,11 +26,6 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	g_Game = GetEngineVersion();
-	if(g_Game != Engine_CSGO && g_Game != Engine_CSS)
-	{
-		SetFailState("This plugin is for CSGO/CSS only.");	
-	}
 	CreateConVar("serverCommands_version", PLUGIN_VERSION, "Plugin Version", FCVAR_NOTIFY|FCVAR_REPLICATED);
 	debugMode = CreateConVar("serverCommands_debug", "0", "Enables or disables the debug option");
 	AutoExecConfig(true, "plugin.ServerCommands");
