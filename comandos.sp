@@ -77,11 +77,11 @@ public void OnMapStart()
 		PrintToServer("[ServerCommands] %t", "Loading commands list");
 		for (i = 0; i < commandsArray.Length; i++)
 		{
-			char stringFromArray[128];
+			char commandFromArray[128];
 			char descFromArray[128];
-			commandsArray.GetString(i, stringFromArray, 127);
+			commandsArray.GetString(i, commandFromArray, 127);
 			phrasesArray.GetString(i, descFromArray, 127);
-			PrintToServer("[%i] %s - %s", i, stringFromArray, descFromArray);
+			PrintToServer("[%i] %s - %s", i, commandFromArray, descFromArray);
 		}
 		PrintToServer("[ServerCommands] %t", "Finished loading commands list");
 	}
