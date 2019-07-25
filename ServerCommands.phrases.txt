@@ -13,4 +13,22 @@
 		"pt"	"Executar"
 		"es"	"Ejecutar"
 	}
+
+	"cant read from config file"
+	{
+		"en"	"Cannot read from ServerCommands.cfg file. Plugin Halted!"
+		"pt"	"Não foi possível ler o ficheiro ServerCommands.cfg. Plugin terminado!"
+	}
+
+	"Loading commands list"
+	{
+		"en"	"Loading Commands List."
+		"pt"	"A carregar lista de comandos."
+	}
+
+	"Finished loading commands list"
+	{
+		"en"	"Finished loading commands list."
+		"pt"	"Carregamento da lista de comandos terminado."
+	}
 }

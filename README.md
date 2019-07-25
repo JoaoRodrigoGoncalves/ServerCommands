@@ -14,4 +14,4 @@ ServerCommands.phrases.txt -> addons/sourcemod/translations </br>
 
 ## TO-DO
 
-Clean up the spaghetti code.
+Nothing (yet)
